@@ -54,7 +54,6 @@ function setupVideoClickListeners() {
         data: videoData
       }, response => {
         if (response.status == "success") {
-          console.log("Get response from background:", response);
           const thumbNode = videoContainer.querySelector('ytd-thumbnail a#thumbnail yt-image img') as HTMLImageElement;
           if (response.data.score > 5) {
             thumbNode.src = "https://openclipart.org/image/2400px/svg_to_png/28688/skotan-Thumbs-up-smiley.png"
