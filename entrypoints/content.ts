@@ -1,5 +1,3 @@
-console.log("YouTube Click Listener content script loaded");
-
 function extractMetadata(videoContainer: HTMLElement) {
   if (videoContainer == null) {
     return null;
@@ -23,51 +21,59 @@ function extractMetadata(videoContainer: HTMLElement) {
     }
   }
   return {
-    "videoId": videoId,
-    "title": title,
-    "description": description,
-    "thumbnailUrl": thumbnail,
-    "views": views,
-    "age": age
+    videoId: videoId,
+    title: title,
+    description: description,
+    thumbnailUrl: thumbnail,
+    views: views,
+    age: age
   };
 }
 
 // Function to handle video clicks
 function setupVideoClickListeners() {
   // Target all video thumbnails on YouTube
-  const videoElements = document.querySelectorAll('a#thumbnail');
-
+  let videoElements = document.querySelectorAll('a#thumbnail');
+  if (videoElements.length === 0) {
+    console.log("No video elements found on the page.");
+    return;
+  }
   console.log("Video elements found:", videoElements.length);
-
   videoElements.forEach(videoElement => {
     // Check if we've already added a listener to this element
     if (!videoElement.hasAttribute('data-click-listener')) {
       videoElement.setAttribute('data-click-listener', 'true');
-
-      videoElement.addEventListener('click', function (event) {
-        event.preventDefault(); // Prevent default action
-        // Get video information
-        // TODO: check if this works
-        const videoContainer = videoElement.closest('ytd-rich-item-renderer, ytd-compact-video-renderer, ytd-video-renderer');
-        const videoData = extractMetadata(videoContainer as HTMLElement);
-        console.log("Video clicked console.js", videoData);
-
-        // Send message to background script
-        browser.runtime.sendMessage({
-          action: "videoClicked",
-          videoData: videoData
-        }, response => {
-          console.log("Response from background:", response);
-        });
-      });
+      const videoContainer = videoElement.closest('ytd-rich-item-renderer, ytd-compact-video-renderer, ytd-video-renderer');
+      if (!videoContainer) {
+        console.log("No video container found for this element.");
+        return;
+      }
+      const videoData = extractMetadata(videoContainer as HTMLElement);
+      browser.runtime.sendMessage({
+        action: "videoElementFound",
+        data: videoData
+      }, response => {
+        if (response.status == "success") {
+          console.log("Get response from background:", response);
+          const thumbNode = videoContainer.querySelector('ytd-thumbnail a#thumbnail yt-image img') as HTMLImageElement;
+          if (response.data.score > 5) {
+            thumbNode.src = "https://openclipart.org/image/2400px/svg_to_png/28688/skotan-Thumbs-up-smiley.png"
+          } else {
+            thumbNode.src = "https://openclipart.org/image/2400px/svg_to_png/63433/Thumbs-down-smiley2.png"
+          }
+        } else {
+          console.log("Failed to get response from background:", response);
+        }
+      })
     }
   });
 }
 
 
 export default defineContentScript({
-  matches: ['*://youtube.com/*'],
-  main() {
+  matches: ['*://*.youtube.com/*'],
+  main(ctx) {
+    console.log("YouTube Click Listener content script loaded");
     setupVideoClickListeners();
 
 

@@ -1,4 +1,4 @@
-import { LLM, LMStudioClient, ModelNamespace } from '@lmstudio/sdk';
+import { LLM, LMStudioClient } from '@lmstudio/sdk';
 import { z } from 'zod';
 
 const prompt = `
@@ -15,11 +15,6 @@ score: your score for the video
 explanation: your explanation for the score
 `
 
-const schema = z.object({
-  score: z.number().int(),
-  explanation: z.string()
-})
-
 interface VideoRequest {
   title: string
   description: string | null
@@ -27,7 +22,6 @@ interface VideoRequest {
   length: string,
   views: string,
 }
-
 
 class LMStudio {
   client: LMStudioClient
@@ -44,14 +38,20 @@ class LMStudio {
 
   async request(options: VideoRequest, thumb: string) {
     const t = await this.client.files.prepareImageBase64("thumbnail", thumb)
-
-    const response = await this.model?.respond([
-      { role: 'system', content: prompt },
-      { role: 'user', content: JSON.stringify(options), images: [t] },
-    ], {
-      structured: schema,
+    const schema = z.object({
+      score: z.number().int(),
+      explanation: z.string()
     })
-    if (response !== undefined && response?.content === undefined) {
+    const response = await this.model?.respond(
+      [
+        { role: 'system', content: prompt },
+        { role: 'user', content: JSON.stringify(options), images: [t] },
+      ],
+      {
+        structured: schema,
+      }
+    )
+    if (response !== undefined && response?.content !== undefined) {
       return JSON.parse(response?.content)
     }
     throw new Error('Response is undefined or does not contain content');
@@ -59,36 +59,44 @@ class LMStudio {
 }
 
 
-export default defineBackground(async () => {
+export default defineBackground(() => {
   // console.log('Hello background!', { id: browser.runtime.id });
+  console.log("Background script loaded");
   const lmStudio = new LMStudio();
-  await lmStudio.load()
-  browser.runtime.onMessage.addListener(async (message, _, sendResponse) => {
-    if (message.action !== 'videoClicked') {
+  (async () => {
+    await lmStudio.load()
+  })();
+
+  browser.runtime.onMessage.addListener((message, _, sendResponse) => {
+    if (message.action !== 'videoElementFound') {
       return;
     }
 
-    const { title, description, age, length, views, thumbnailUrl } = message.data;
-    const body = await fetch(thumbnailUrl).then(res => res.blob());
-    const thumb = await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(body);
-    });
+    const { videoId, title, description, age, length, views, thumbnailUrl } = message.data;
+    (async () => {
+      const body = await fetch(thumbnailUrl).then(res => res.blob());
+      const thumb = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(body);
+      });
 
-    try {
-      const resp = await lmStudio.request({
-        title,
-        description,
-        age,
-        length,
-        views
-      }, thumb);
-      sendResponse({ status: "success", data: resp });
-    } catch (error) {
-      sendResponse({ status: "failed", error: (error as Error).message });
-    }
+      console.log("Processing video:", videoId);
+
+      try {
+        const resp = await lmStudio.request({
+          title,
+          description,
+          age,
+          length,
+          views
+        }, thumb);
+        sendResponse({ status: "success", data: resp });
+      } catch (error) {
+        sendResponse({ status: "failed", error: (error as Error).message });
+      }
+    })()
     return true
   });
 });

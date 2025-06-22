@@ -6,10 +6,18 @@
   "image": "mcr.microsoft.com/devcontainers/base:bookworm",
   "features": {
     "ghcr.io/shyim/devcontainers-features/bun:0": {},
-    "ghcr.io/devcontainers/features/desktop-lite:1": {}
+    "ghcr.io/devcontainers/features/desktop-lite:1": {},
+    "ghcr.io/rocker-org/devcontainer-features/apt-packages:1": {
+      "packages": "chromium,fonts-ipafont-gothic,fonts-wqy-zenhei,fonts-thai-tlwg,fonts-kacst,fonts-freefont-ttf,libxss1"
+    }
   },
   "containerEnv": {
     "VNC_RESOLUTION": "1100x700"
+  },
+  "remoteEnv": {
+    "PUPPETEER_SKIP_CHROMIUM_DOWNLOAD": "true",
+    "PUPPETEER_EXECUTABLE_PATH": "/usr/bin/chromium",
+    "CHROME_EXTRA_FLAGS": "--no-sandbox"
   },
   "forwardPorts": [
     3000,
