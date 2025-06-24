@@ -1,5 +1,4 @@
-import { LLM, LMStudioClient } from '@lmstudio/sdk';
-import { z } from 'zod';
+import { LMStudio } from "../ai/lmstudio";
 
 const prompt = `
 You are an assistant that rates a video on a scale of 1 to 10 based on how informative you think they are.  Rate non-informative videos lower. You are provided with structured JSON metadata about the video with the following fields:
@@ -15,54 +14,10 @@ score: your score for the video
 explanation: your explanation for the score
 `
 
-interface VideoRequest {
-  title: string
-  description: string | null
-  age: string
-  length: string,
-  views: string,
-}
-
-class LMStudio {
-  client: LMStudioClient
-  model?: LLM
-  constructor(baseUrl: string = "ws://localhost:1234") {
-    this.client = new LMStudioClient({
-      baseUrl: baseUrl
-    });
-  }
-
-  async load(model: string = "gemma-3-4b-it-qat") {
-    this.model = await this.client.llm.model(model)
-  }
-
-  async request(options: VideoRequest, thumb: string) {
-    const t = await this.client.files.prepareImageBase64("thumbnail", thumb)
-    const schema = z.object({
-      score: z.number().int(),
-      explanation: z.string()
-    })
-    const response = await this.model?.respond(
-      [
-        { role: 'system', content: prompt },
-        { role: 'user', content: JSON.stringify(options), images: [t] },
-      ],
-      {
-        structured: schema,
-      }
-    )
-    if (response !== undefined && response?.content !== undefined) {
-      return JSON.parse(response?.content)
-    }
-    throw new Error('Response is undefined or does not contain content');
-  }
-}
-
 
 export default defineBackground(() => {
-  // console.log('Hello background!', { id: browser.runtime.id });
   console.log("Background script loaded");
-  const lmStudio = new LMStudio();
+  const lmStudio = new LMStudio(prompt);
   (async () => {
     await lmStudio.load()
   })();
@@ -74,24 +29,16 @@ export default defineBackground(() => {
 
     const { videoId, title, description, age, length, views, thumbnailUrl } = message.data;
     (async () => {
-      const body = await fetch(thumbnailUrl).then(res => res.blob());
-      const thumb = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(body);
-      });
-
       console.log("Processing video:", videoId);
-
       try {
         const resp = await lmStudio.request({
           title,
           description,
           age,
           length,
-          views
-        }, thumb);
+          views,
+          thumbnailUrl
+        });
         sendResponse({ status: "success", data: resp });
       } catch (error) {
         sendResponse({ status: "failed", error: (error as Error).message });
