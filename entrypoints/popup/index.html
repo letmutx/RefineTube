@@ -1,13 +1,63 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Default Popup Title</title>
-    <meta name="manifest.type" content="browser_action" />
-  </head>
-  <body>
-    <div id="app"></div>
-    <script type="module" src="./main.ts"></script>
-  </body>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RefineTube</title>
+  <meta name="manifest.type" content="browser_action" />
+</head>
+
+<body>
+
+  <!-- <div id="successPage" hidden>
+        <header>
+            <h1>Configuration saved</h1>
+        </header>
+
+        <main>
+            <p>
+                Your AI provider configuration has been saved successfully.
+            </p>
+            <button id="closeBtn">Close</button>
+        </main>
+    </div>
+
+    <div id="errorPage" hidden>
+        <header>
+            <h1>Error</h1>
+        </header>
+
+        <main>
+            <p>
+                An error occurred while saving the configuration. Please try again.
+            </p>
+
+            <p id="errorMsg"></p>
+            <button id="retryBtn">Retry</button>
+        </main>
+    </div> -->
+  <div id="app">
+    <header>
+      <h1>Configure AI provider</h1>
+    </header>
+    <main>
+      <label for="aiProviderSelection">Select AI provider:</label>
+      <select id="aiProviderSelection">
+        <option value="google">Google</option>
+        <option value="lmstudio">LMStudio</option>
+      </select>
+      <form id="googleForm">
+        <input type="text" id="apiKeyInput" placeholder="API Key" />
+      </form>
+      <form id="lmStudioForm" hidden>
+        <input type="text" id="baseUrlInput" placeholder="Base URL" />
+      </form>
+      <button id="save">Save</button>
+      <p id="saveErrorMsg" style="color: red" hidden></p>
+    </main>
+  </div>
+  <script type="module" src="./main.ts"></script>
+</body>
+
 </html>

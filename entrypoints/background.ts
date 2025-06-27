@@ -22,7 +22,23 @@ export default defineBackground(() => {
     await lmStudio.load()
   })();
 
+
+  browser.runtime.onInstalled.addListener(async ({ reason }) => {
+    if (reason !== "install") return;
+
+    // Open a tab on install
+    await browser.tabs.create({
+      url: browser.runtime.getURL('/get-started.html'),
+      active: true,
+    });
+  });
+
+
   browser.runtime.onMessage.addListener((message, _, sendResponse) => {
+    if (message.type === 'save-ai-config') {
+      console.log('Received save-ai-config message:', message);
+    }
+
     if (message.action !== 'videoElementFound') {
       return;
     }

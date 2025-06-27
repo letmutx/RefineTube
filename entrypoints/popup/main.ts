@@ -1,24 +1,57 @@
-import './style.css';
-import typescriptLogo from '@/assets/typescript.svg';
-import viteLogo from '/wxt.svg';
-import { setupCounter } from '@/components/counter';
+declare const aiProviderSelection: HTMLSelectElement;
+declare const saveErrorMsg: HTMLParagraphElement;
+declare const lmStudioForm: HTMLFormElement;
+declare const googleForm: HTMLFormElement;
+declare const save: HTMLButtonElement
+declare const apiKeyInput: HTMLInputElement;
+declare const baseUrlInput: HTMLInputElement;
 
-document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
-  <div>
-    <a href="https://wxt.dev" target="_blank">
-      <img src="${viteLogo}" class="logo" alt="WXT logo" />
-    </a>
-    <a href="https://www.typescriptlang.org/" target="_blank">
-      <img src="${typescriptLogo}" class="logo vanilla" alt="TypeScript logo" />
-    </a>
-    <h1>WXT + TypeScript</h1>
-    <div class="card">
-      <button id="counter" type="button"></button>
-    </div>
-    <p class="read-the-docs">
-      Click on the WXT and TypeScript logos to learn more
-    </p>
-  </div>
-`;
 
-setupCounter(document.querySelector<HTMLButtonElement>('#counter')!);
+aiProviderSelection.addEventListener("change", function (event) {
+    saveErrorMsg.hidden = true;
+    if ((event.target as HTMLInputElement).value === "lmstudio") {
+        lmStudioForm.hidden = false;
+        googleForm.hidden = true;
+    } else {
+        lmStudioForm.hidden = true;
+        googleForm.hidden = false;
+    }
+})
+
+save.addEventListener("click", function () {
+    saveErrorMsg.hidden = true;
+    const aiProvider = aiProviderSelection.value;
+    let apiKey = "";
+    let baseUrl = "";
+
+    // TODO: customise prompt
+    // TODO: customise model
+    if (aiProvider === "google") {
+        apiKey = apiKeyInput.value.trim();
+        if (apiKey.length === 0) {
+            saveErrorMsg.hidden = false;
+            saveErrorMsg.innerText = "API Key is required for Google AI provider.";
+            return;
+        }
+    } else if (aiProvider === "lmstudio") {
+        baseUrl = baseUrlInput.value.trim();
+        if (baseUrl.length === 0) {
+            saveErrorMsg.hidden = false;
+            saveErrorMsg.innerText = "LM Studio Base URL is required.";
+            return;
+        }
+    }
+
+    console.log("Sending AI config")
+    // TODO: test this.
+    browser.runtime.sendMessage({
+        type: "save-ai-config",
+        aiProvider: aiProvider,
+        apiKey: apiKey,
+        baseUrl: baseUrl
+    }).then(() => {
+
+    }).catch((error) => {
+
+    });
+})
