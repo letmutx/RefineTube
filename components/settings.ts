@@ -1,3 +1,5 @@
+import { settingsStorage } from "../utils/settings";
+
 declare const aiProviderSelection: HTMLSelectElement;
 declare const saveErrorMsg: HTMLParagraphElement;
 declare const lmStudioForm: HTMLFormElement;
@@ -18,7 +20,7 @@ aiProviderSelection.addEventListener("change", function (event) {
     }
 })
 
-save.addEventListener("click", function () {
+save.addEventListener("click", async () => {
     saveErrorMsg.hidden = true;
     const aiProvider = aiProviderSelection.value;
     let apiKey = "";
@@ -32,6 +34,11 @@ save.addEventListener("click", function () {
             saveErrorMsg.hidden = false;
             saveErrorMsg.innerText = "API Key is required for Google AI provider.";
             return;
+        } else {
+            await settingsStorage.setValue({
+                provider: aiProvider,
+                apiKey: apiKey,
+            })
         }
     } else if (aiProvider === "lmstudio") {
         baseUrl = baseUrlInput.value.trim();
@@ -39,19 +46,11 @@ save.addEventListener("click", function () {
             saveErrorMsg.hidden = false;
             saveErrorMsg.innerText = "LM Studio Base URL is required.";
             return;
+        } else {
+            await settingsStorage.setValue({
+                provider: 'lmstudio',
+                baseUrl: baseUrl
+            })
         }
     }
-
-    console.log("Sending AI config")
-    // TODO: test this.
-    browser.runtime.sendMessage({
-        type: "save-ai-config",
-        aiProvider: aiProvider,
-        apiKey: apiKey,
-        baseUrl: baseUrl
-    }).then(() => {
-
-    }).catch((error) => {
-
-    });
 })
