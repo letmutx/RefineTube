@@ -1,5 +1,6 @@
-import { LMStudio } from "../ai/lmstudio";
-import { AIProviderSettings } from '@/utils/settings';
+import { LMStudio } from "../../ai/lmstudio";
+import { GoogleStudio } from "../../ai/google";
+import { AIProviderSettings, LMStudioSettings, GoogleSettings } from '@/utils/settings';
 
 const prompt = `
 You are an assistant that rates a video on a scale of 1 to 10 based on how informative you think the video is. Rate non-informative videos lower. You are provided with structured JSON metadata about the video with the following fields:
@@ -14,51 +15,44 @@ score: your score for the video
 explanation: your explanation for the score
 `
 
+type StateInit = { state: 'init' };
+type StateLoaded = { state: 'loaded', client: LMStudio | GoogleStudio }
+type StateFailed = { state: 'failed', error: string }
+
+type State = StateInit | StateLoaded | StateFailed;
+
+async function load(settings: AIProviderSettings): Promise<LMStudio | GoogleStudio> {
+  switch (settings.provider) {
+    case 'google':
+      return new GoogleStudio(prompt, (settings as GoogleSettings).apiKey);
+    case 'lmstudio':
+      const lmStudio = new LMStudio(prompt, (settings as LMStudioSettings).baseUrl);
+      await lmStudio.load();
+      return lmStudio;
+  }
+}
 
 export default defineBackground(() => {
-  const settings = settingsStorage.getValue().then((settings: AIProviderSettings) => {
+
+  let currentState: State = { state: 'init' };
+
+  settingsStorage.getValue().then(async (settings: AIProviderSettings) => {
     if (settings === undefined || settings == null) {
-      throw new Error("AI Provider settings not found. Please configure the AI provider in the settings.");
+      console.log("AI Provider settings not found. Please configure the AI provider in the settings.");
+      return
     }
-    switch (settings.provider) {
-      case 'google':
-        console.warn("Google AI provider is not supported yet. Please use LM Studio.");
-        throw new Error("Google AI provider is not supported yet. Please use LM Studio.");
-      case 'lmstudio':
-        return settings;
-    }
+    currentState = { state: 'loaded', client: await load(settings) };
   }).catch((error) => {
-    console.error("Error loading AI provider settings:", error);
-    return null;
+    currentState = { state: 'failed', error: (error as Error).message };
   });
 
-  if (settings === null) {
-
-  }
-
-  // ((settings) => {
-  //   if (settings === undefined || settings == null) {
-  //     throw new Error("AI Provider settings not found. Please configure the AI provider in the settings.");
-  //   }
-  //   if (settings.provider === 'google') {
-  //     console.warn("Google AI provider is not supported yet. Please use LM Studio.");
-  //   } else if (settings.provider === 'lmstudio') {
-  //     console.log("Using LM Studio as AI provider with base URL:", settings.baseUrl);
-  //     lmStudio.load(settings.baseUrl);
-  //   } else {
-  //     throw new Error(`Unknown AI provider: ${settings.provider}`);
-  //   }
-  // })
-
-  const lmStudio = new LMStudio();
-  (async () => {
-    await lmStudio.load()
-  })();
-
+  settingsStorage.watch(async (newSettings) => {
+    currentState = { state: 'init' };
+    currentState = { state: 'loaded', client: await load(newSettings) };
+  })
 
   browser.runtime.onInstalled.addListener(async ({ reason }) => {
     if (reason !== "install") return;
-
     // Open a tab on install
     await browser.tabs.create({
       url: browser.runtime.getURL('/get-started.html'),
@@ -71,30 +65,31 @@ export default defineBackground(() => {
     if (message.action !== 'videoElementFound') {
       return;
     }
-
     const { videoId, title, description, age, length, views, thumbnailUrl } = message.data;
-
-    const body = await fetch(thumbnailUrl).then(res => res.blob());
-    const thumb = await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(body);
-    });
 
     console.log("Processing video:", videoId);
 
-    try {
-      const resp = await lmStudio.request({
-        title,
-        description,
-        age,
-        length,
-        views
-      }, thumb);
-      sendResponse({ status: "success", data: resp });
-    } catch (error) {
-      sendResponse({ status: "failed", error: (error as Error).message });
+    switch (currentState.state) {
+      case 'loaded':
+        try {
+          const resp = await currentState.client.request({
+            title,
+            description,
+            age,
+            length,
+            views,
+            thumbnailUrl,
+          });
+          sendResponse({ status: "success", data: resp });
+        } catch (error) {
+          sendResponse({ status: "failed", error: (error as Error).message });
+        }
+      case 'init':
+        sendResponse({ status: "failed", error: "AI provider is not initialized yet. Please wait." });
+        break;
+      case 'failed':
+        sendResponse({ status: "failed", error: currentState.error });
+        break;
     }
 
     return true

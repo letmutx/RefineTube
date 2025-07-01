@@ -3,7 +3,7 @@ import { defineConfig } from 'wxt';
 // See https://wxt.dev/api/config.html
 export default defineConfig({
     manifest: {
-        permissions: ["scripting"],
+        permissions: ["scripting", "storage"],
     },
     webExt: {
         startUrls: ["https://youtube.com"],

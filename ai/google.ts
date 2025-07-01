@@ -1,11 +1,11 @@
 import { GoogleGenAI } from "@google/genai";
 import { VideoRequest, imageToBase64 } from "./base";
 
-class GoogleStudio {
+export class GoogleStudio {
     systemPrompt: string;
     model: string;
     ai: GoogleGenAI
-    constructor(model: string = "gemma-3-27b-qat", systemPrompt: string, apiKey: string) {
+    constructor(systemPrompt: string, apiKey: string, model: string = "gemma-3-27b-qat") {
         this.systemPrompt = systemPrompt;
         this.model = model;
         this.ai = new GoogleGenAI({ apiKey: apiKey });

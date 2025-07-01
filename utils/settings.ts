@@ -1,15 +1,11 @@
 import { storage } from 'wxt/utils/storage';
 
-
-type Provider = 'google' | 'lmstudio';
-
-
-type GoogleSettings = {
+export type GoogleSettings = {
     provider: 'google';
     apiKey: string;
 }
 
-type LMStudioSettings = {
+export type LMStudioSettings = {
     provider: 'lmstudio';
     baseUrl: string;
 }
