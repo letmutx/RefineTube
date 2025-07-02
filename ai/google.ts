@@ -12,6 +12,7 @@ export class GoogleStudio {
     }
 
     async request(options: VideoRequest) {
+        let base64 = await imageToBase64(options.thumbnailUrl)
         const response = await this.ai.models.generateContent({
             model: this.model,
             contents: [
@@ -20,8 +21,8 @@ export class GoogleStudio {
                 },
                 {
                     inlineData: {
-                        mimeType: "image/jpeg",
-                        data: await imageToBase64(options.thumbnailUrl),
+                        mimeType: base64.split("base64,")[0].replace("data:", "").replace(";", ""),
+                        data: base64.replace(/^data:image\/[a-z]+;base64,/, ""),
                     },
                 },
                 {

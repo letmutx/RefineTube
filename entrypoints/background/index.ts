@@ -33,7 +33,6 @@ async function load(settings: AIProviderSettings): Promise<LMStudio | GoogleStud
 }
 
 export default defineBackground(() => {
-
   let currentState: State = { state: 'init' };
 
   settingsStorage.getValue().then(async (settings: AIProviderSettings) => {
@@ -51,22 +50,10 @@ export default defineBackground(() => {
     currentState = { state: 'loaded', client: await load(newSettings) };
   })
 
-  browser.runtime.onInstalled.addListener(async ({ reason }) => {
-    if (reason !== "install") return;
-    // Open a tab on install
-    await browser.tabs.create({
-      url: browser.runtime.getURL('/get-started.html'),
-      active: true,
-    });
-  });
-
-
-  browser.runtime.onMessage.addListener(async (message, _, sendResponse) => {
-    if (message.action !== 'videoElementFound') {
-      return;
-    }
+  async function getPrediction(message: any) {
     const { videoId, title, description, age, length, views, thumbnailUrl } = message.data;
 
+    // TODO: also cache the response to avoid multiple requests for the same video
     console.log("Processing video:", videoId);
 
     switch (currentState.state) {
@@ -80,18 +67,32 @@ export default defineBackground(() => {
             views,
             thumbnailUrl,
           });
-          sendResponse({ status: "success", data: resp });
+          return { status: "success", data: resp }
         } catch (error) {
-          sendResponse({ status: "failed", error: (error as Error).message });
+          return { status: "failed", error: (error as Error).message }
         }
       case 'init':
-        sendResponse({ status: "failed", error: "AI provider is not initialized yet. Please wait." });
-        break;
+        return { status: "failed", error: "AI provider is not initialized yet. Please wait." }
       case 'failed':
-        sendResponse({ status: "failed", error: currentState.error });
-        break;
+        return { status: "failed", error: currentState.error }
     }
+  }
 
-    return true
+  browser.runtime.onInstalled.addListener(async ({ reason }) => {
+    if (reason !== "install") return;
+    // Open a tab on install
+    await browser.tabs.create({
+      url: browser.runtime.getURL('/get-started.html'),
+      active: true,
+    });
+  });
+
+
+  browser.runtime.onMessage.addListener((message, _, sendResponse) => {
+    if (message.action !== 'videoClicked') {
+      return;
+    }
+    getPrediction(message).then(sendResponse)
+    return true;
   });
 });

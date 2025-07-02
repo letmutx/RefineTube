@@ -23,34 +23,34 @@ aiProviderSelection.addEventListener("change", function (event) {
 save.addEventListener("click", async () => {
     saveErrorMsg.hidden = true;
     const aiProvider = aiProviderSelection.value;
-    let apiKey = "";
-    let baseUrl = "";
 
     // TODO: customise prompt
     // TODO: customise model
-    if (aiProvider === "google") {
-        apiKey = apiKeyInput.value.trim();
-        if (apiKey.length === 0) {
-            saveErrorMsg.hidden = false;
-            saveErrorMsg.innerText = "API Key is required for Google AI provider.";
-            return;
-        } else {
-            await settingsStorage.setValue({
-                provider: aiProvider,
-                apiKey: apiKey,
-            })
-        }
-    } else if (aiProvider === "lmstudio") {
-        baseUrl = baseUrlInput.value.trim();
-        if (baseUrl.length === 0) {
-            saveErrorMsg.hidden = false;
-            saveErrorMsg.innerText = "LM Studio Base URL is required.";
-            return;
-        } else {
-            await settingsStorage.setValue({
-                provider: 'lmstudio',
-                baseUrl: baseUrl
-            })
-        }
+    switch (aiProvider) {
+        case "google":
+            const apiKey = apiKeyInput.value.trim();
+            if (apiKey.length === 0) {
+                saveErrorMsg.hidden = false;
+                saveErrorMsg.innerText = "API Key is required for Google AI provider.";
+                return;
+            } else {
+                await settingsStorage.setValue({
+                    provider: aiProvider,
+                    apiKey: apiKey,
+                })
+            }
+            break;
+        case "lmstudio":
+            const baseUrl = baseUrlInput.value.trim();
+            if (baseUrl.length === 0) {
+                saveErrorMsg.hidden = false;
+                saveErrorMsg.innerText = "LM Studio Base URL is required.";
+                return;
+            } else {
+                await settingsStorage.setValue({
+                    provider: 'lmstudio',
+                    baseUrl: baseUrl
+                })
+            }
     }
 })

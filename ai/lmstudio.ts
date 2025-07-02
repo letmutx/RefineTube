@@ -18,7 +18,8 @@ export class LMStudio {
     }
 
     async request(options: VideoRequest) {
-        const t = await this.client.files.prepareImageBase64("thumbnail", await imageToBase64(options.thumbnailUrl));
+        const imgBase64 = await imageToBase64(options.thumbnailUrl)
+        const t = await this.client.files.prepareImageBase64("thumbnail", imgBase64);
         const schema = z.object({
             score: z.number().int(),
             explanation: z.string()

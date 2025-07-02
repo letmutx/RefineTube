@@ -4,6 +4,7 @@ import { defineConfig } from 'wxt';
 export default defineConfig({
     manifest: {
         permissions: ["scripting", "storage"],
+        host_permissions: ["*://i.ytimg.com/*"]
     },
     webExt: {
         startUrls: ["https://youtube.com"],
