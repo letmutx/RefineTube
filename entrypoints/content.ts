@@ -64,7 +64,7 @@ function extractVideoMetadata(videoContainer: HTMLElement): VideoRequest {
 }
 
 function isShort(videoContainer: HTMLElement) {
-  return videoContainer.querySelector('ytm-shorts-lockup-view-model-v2') != null
+  return videoContainer.tagName == 'YTM-SHORTS-LOCKUP-VIEW-MODEL-V2'
 }
 
 function extractMetadata(videoContainer: HTMLElement) {
@@ -96,7 +96,7 @@ function registerClickListeners() {
     return;
   }
 
-  const videoContainers = document.querySelectorAll('#page-manager #contents ytd-rich-item-renderer, #page-manager #contents ytd-grid-video-renderer, #page-manager #contents ytd-video-renderer')
+  const videoContainers = document.querySelectorAll('#page-manager #contents ytd-rich-item-renderer, #page-manager #contents ytd-grid-video-renderer, #page-manager #contents ytd-video-renderer, #page-manager #contents ytm-shorts-lockup-view-model-v2')
 
   videoContainers.forEach((videoContainer: Element) => {
     if (videoContainer.hasAttribute('refinetube-click-listener')) {

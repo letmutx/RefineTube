@@ -6,31 +6,34 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>RefineTube</title>
   <meta name="manifest.type" content="browser_action" />
-  <link rel="stylesheet" type="text/css" href="../../assets/simple.min.css" />
+  <!-- TODO: figure how to use css here -->
 </head>
 
 <body>
   <div id="app">
-    <header>
-      <h1>RefineTube</h1>
-    </header>
     <main>
-      <h2>RefineTube status</h2>
-      <p id="status"></p>
-      <h2>Configure AI Settings</h2>
-      <label for="aiProviderSelection">Select AI provider:</label>
-      <select id="aiProviderSelection">
-        <option value="google">Google</option>
-        <option value="lmstudio">LMStudio</option>
-      </select>
-      <form id="googleForm">
-        <input type="text" id="apiKeyInput" placeholder="API Key" />
-      </form>
-      <form id="lmStudioForm" hidden>
-        <input type="text" id="baseUrlInput" placeholder="Base URL" />
-      </form>
-      <button id="save">Save</button>
-      <p id="saveErrorMsg" style="color: red" hidden></p>
+      <section>
+        <h2>Status</h2>
+        <p id="aiStatus">Fetching status...</p>
+      </section>
+
+      <section>
+        <h2>Configure</h2>
+        <label for="aiProviderSelection">Select AI provider:
+          <select id="aiProviderSelection">
+            <option value="google">Google</option>
+            <option value="lmstudio">LMStudio</option>
+          </select>
+        </label>
+        <form id="googleForm">
+          <input type="text" id="apiKeyInput" placeholder="API Key" />
+        </form>
+        <form id="lmStudioForm" hidden>
+          <input type="text" id="baseUrlInput" placeholder="Base URL" />
+        </form>
+        <button id="saveSettings">Save</button>
+        <p id="saveErrorMsg" style="color: red" hidden></p>
+      </section>
     </main>
   </div>
   <script type="module" src="../../components/settings.ts"></script>
