@@ -4,10 +4,10 @@ import { AIProviderSettings, LMStudioSettings, GoogleSettings } from '@/utils/se
 
 const prompt = `
 You are an assistant that rates a video on a scale of 1 to 10 based on how informative you think the video is. Rate non-informative videos lower. You are provided with structured JSON metadata about the video with the following fields:
+isShort: Indicating if the video is a YouTube Short
 title: title of the video
 description: Optional description of the video, it will be NULL if the description could not be retrieved.
 age: time since the video was published
-length: duration of the video
 views: number of views for the video
 
 Use the attached thumbnail image also. In general, click bait, entertainment videos should be scored lower and informative videos higher. Analyse the video title and description for shock factor and other attention grabbing techniques and rate the video lower. Your output should be a json with 2 fields:
@@ -51,7 +51,7 @@ export default defineBackground(() => {
   })
 
   async function getPrediction(message: any) {
-    const { videoId, title, description, age, length, views, thumbnailUrl } = message.data;
+    const { videoId, title, description, age, views, thumbnailUrl, isShort } = message.data;
 
     // TODO: also cache the response to avoid multiple requests for the same video
     console.log("Processing video:", videoId);
@@ -60,12 +60,13 @@ export default defineBackground(() => {
       case 'loaded':
         try {
           const resp = await currentState.client.request({
+            videoId,
             title,
             description,
             age,
-            length,
             views,
             thumbnailUrl,
+            isShort,
           });
           return { status: "success", data: resp }
         } catch (error) {

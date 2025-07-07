@@ -6,14 +6,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>RefineTube</title>
   <meta name="manifest.type" content="browser_action" />
+  <link rel="stylesheet" type="text/css" href="../../assets/simple.min.css" />
 </head>
 
 <body>
   <div id="app">
     <header>
-      <h1>Configure AI provider</h1>
+      <h1>RefineTube</h1>
     </header>
     <main>
+      <h2>RefineTube status</h2>
+      <p id="status"></p>
+      <h2>Configure AI Settings</h2>
       <label for="aiProviderSelection">Select AI provider:</label>
       <select id="aiProviderSelection">
         <option value="google">Google</option>

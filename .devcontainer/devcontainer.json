@@ -37,7 +37,8 @@
         "editor.formatOnSave": true
       },
       "extensions": [
-        "ms-playwright.playwright"
+        "ms-playwright.playwright",
+        "ms-vscode.live-server"
       ]
     }
   },

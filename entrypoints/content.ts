@@ -1,13 +1,38 @@
+import { VideoRequest } from '../ai/base';
 
-// TODO: make it work with shorts
-function extractMetadata(videoContainer: HTMLElement) {
-  if (videoContainer == null) {
-    return null;
+function extractShortsMetadata(videoContainer: HTMLElement): VideoRequest {
+  const thumbNode = videoContainer.querySelector('img.yt-core-image') as HTMLImageElement;
+  const thumbnail = thumbNode.src;
+  const videoId = videoContainer.querySelector('a[data-href*="/shorts"]')?.getAttribute('data-href')?.split("/").at(-1);
+  const title = (videoContainer.querySelector('ytm-shorts-lockup-view-model-v2 h3.shortsLockupViewModelHostMetadataTitle a span[role="text"]') as HTMLSpanElement).innerText;
+  const spans = videoContainer.querySelectorAll('span[role="text"]')
+  let views = null;
+  for (const span of spans) {
+    // TODO: what if the language is different?
+    if (span.textContent?.includes(" views")) {
+      views = span.textContent.split(" ")[0]; // strip off "views" from string
+      break;
+    }
   }
+  if (videoId == null) {
+    throw new Error("Video ID not found in the shorts container");
+  }
+  return {
+    isShort: true,
+    videoId: videoId,
+    title: title,
+    description: null, // Shorts do not have descriptions in the same way as regular videos
+    thumbnailUrl: thumbnail,
+    views: views,
+    age: null, // Unavailable for shorts
+  }
+}
+
+function extractVideoMetadata(videoContainer: HTMLElement): VideoRequest {
   const thumbNode = videoContainer.querySelector('ytd-thumbnail a#thumbnail yt-image img') as HTMLImageElement;
-  const thumbnail = thumbNode ? thumbNode.src : null;
+  const thumbnail = thumbNode.src;
   const idNode = videoContainer.querySelector('ytd-thumbnail a#thumbnail') as HTMLAnchorElement;
-  const videoId = idNode ? idNode.getAttribute('data-href')?.split('v=')[1]?.split('&')[0] : null;
+  const videoId = idNode.getAttribute('data-href')?.split('v=')[1]?.split('&')[0];
   const title = videoContainer.querySelector("div#meta a#video-title yt-formatted-string")?.textContent;
   const description = videoContainer.querySelector("yt-formatted-string#description-text")?.textContent;
   let views = null, age = null;
@@ -16,21 +41,40 @@ function extractMetadata(videoContainer: HTMLElement) {
     const content = spans[i]?.textContent;
     if (content == null) {
       continue
-    } else if (content.includes("views")) {
+    } else if (content.includes(" views")) {
+      // TODO: what if the language is different?
       views = content.split(" ")[0]; // strip off "views" from string
     } else if (content.includes(" ago")) {
+      // TODO: what if the language is different?
       age = content.substr(0, content.length - 4); // strip off "ago" from string
     }
   }
-  const resp = {
+  if (videoId === undefined) {
+    throw new Error("Video ID not found in the video container");
+  }
+  return {
+    isShort: false,
     videoId: videoId,
-    title: title,
-    description: description,
+    title: title || null,
+    description: description || null,
     thumbnailUrl: thumbnail,
-    views: views,
-    age: age
+    views: views || null,
+    age: age,
   };
-  return resp
+}
+
+function isShort(videoContainer: HTMLElement) {
+  return videoContainer.querySelector('ytm-shorts-lockup-view-model-v2') != null
+}
+
+function extractMetadata(videoContainer: HTMLElement) {
+  if (videoContainer == null) {
+    return null;
+  }
+  if (isShort(videoContainer)) {
+    return extractShortsMetadata(videoContainer);
+  }
+  return extractVideoMetadata(videoContainer);
 }
 
 function replaceHref(link: HTMLAnchorElement) {
@@ -52,7 +96,7 @@ function registerClickListeners() {
     return;
   }
 
-  const videoContainers = document.querySelectorAll('#page-manager #contents ytd-rich-item-renderer, #page-manager #contents ytd-grid-video-renderer, #page-manager #contents ytd-video-renderer, #page-manager #contents ytm-shorts-lockup-view-model-v2')
+  const videoContainers = document.querySelectorAll('#page-manager #contents ytd-rich-item-renderer, #page-manager #contents ytd-grid-video-renderer, #page-manager #contents ytd-video-renderer')
 
   videoContainers.forEach((videoContainer: Element) => {
     if (videoContainer.hasAttribute('refinetube-click-listener')) {
@@ -63,18 +107,11 @@ function registerClickListeners() {
     videoContainer.addEventListener('click', (event: Event) => {
       const state = videoContainer.getAttribute('refinetube-state') as VideoState || 'unknown';
       switch (state) {
-        case 'safe':
-          console.log("Safe video clicked, allowing default action.");
-          return
-        case 'unsafe':
-          event.preventDefault();
-          event.stopPropagation();
-          console.log("Unsafe video clicked, preventing default action.");
-          break;
         case 'loading':
           event.preventDefault();
           event.stopPropagation();
           console.log("Video is loading, preventing default action.");
+          // TODO: show some cool loading animation
           break;
         case 'failed':
           console.log("Video failed to load, preventing default action.");
@@ -82,29 +119,37 @@ function registerClickListeners() {
         case 'unknown':
           event.preventDefault();
           event.stopPropagation();
-          videoContainer.setAttribute('refinetube-state', 'loading');
-          const videoData = extractMetadata(videoContainer as HTMLElement);
-          browser.runtime.sendMessage({
-            action: "videoClicked",
-            data: videoData
-          }, response => {
-            if (response === undefined) {
-              return
-            }
-            if (response.status == "success") {
-              const thumbNode = videoContainer.querySelector('ytd-thumbnail a#thumbnail yt-image img') as HTMLImageElement;
-              if (response.data.score > 5) {
-                videoContainer.setAttribute('refinetube-state', 'safe');
-                // also restore a hrefs
-                thumbNode.src = "https://openclipart.org/image/2400px/svg_to_png/28688/skotan-Thumbs-up-smiley.png"
-              } else {
-                videoContainer.setAttribute('refinetube-state', 'unsafe');
-                thumbNode.src = "https://openclipart.org/image/2400px/svg_to_png/63433/Thumbs-down-smiley2.png"
+          try {
+            const videoData = extractMetadata(videoContainer as HTMLElement);
+            videoContainer.setAttribute('refinetube-state', 'loading');
+            browser.runtime.sendMessage({
+              action: "videoClicked",
+              data: videoData
+            }, response => {
+              if (response === undefined) {
+                videoContainer.setAttribute('refinetube-state', 'failed');
+                return
               }
-            } else {
-              videoContainer.setAttribute('refinetube-state', 'failed');
-            }
-          })
+              // TODO: maybe restore hrefs?
+              const vcHTMLElement = videoContainer as HTMLElement;
+              if (response.status == "success") {
+                if (response.data.score > 5) {
+                  vcHTMLElement.style.border = "2px solid green";
+                  videoContainer.setAttribute('refinetube-state', 'safe');
+
+                } else {
+                  vcHTMLElement.style.border = "2px solid red";
+                  videoContainer.setAttribute('refinetube-state', 'unsafe');
+                }
+              } else {
+                videoContainer.setAttribute('refinetube-state', 'failed');
+              }
+            })
+          } catch (error) {
+            console.error("Error extracting video metadata:", error);
+            videoContainer.setAttribute('refinetube-state', 'failed');
+            return;
+          }
       }
     }, true)
   });

@@ -1,23 +1,12 @@
 export declare interface VideoRequest {
-    title: string
+    title: string | null
     description: string | null
-    age: string
-    length: string,
-    views: string,
+    age: string | null
+    views: string | null
     thumbnailUrl: string
+    isShort: boolean
+    videoId: string
 }
-
-function toDataURL(url: string) {
-    fetch(url)
-        .then(response => response.blob())
-        .then(blob => new Promise((resolve, reject) => {
-            const reader = new FileReader()
-            reader.onloadend = () => resolve(reader.result)
-            reader.onerror = reject
-            reader.readAsDataURL(blob)
-        }))
-}
-
 
 export async function imageToBase64(url: string): Promise<string> {
     const response = await fetch(url)

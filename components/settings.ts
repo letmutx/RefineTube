@@ -2,12 +2,20 @@ import { settingsStorage } from "../utils/settings";
 
 declare const aiProviderSelection: HTMLSelectElement;
 declare const saveErrorMsg: HTMLParagraphElement;
+declare const status: HTMLParagraphElement
 declare const lmStudioForm: HTMLFormElement;
 declare const googleForm: HTMLFormElement;
-declare const save: HTMLButtonElement
+declare const save: HTMLButtonElement;
 declare const apiKeyInput: HTMLInputElement;
 declare const baseUrlInput: HTMLInputElement;
 
+settingsStorage.watch(settings => {
+    if (settings === undefined || settings == null) {
+        status.innerText = "Not configured yet. Please select an AI provider.";
+        return
+    }
+    status.innerText = `Current AI provider: ${settings.provider}`;
+})
 
 aiProviderSelection.addEventListener("change", function (event) {
     saveErrorMsg.hidden = true;
