@@ -3,17 +3,18 @@ import { GoogleStudio } from "../../ai/google";
 import { AIProviderSettings, LMStudioSettings, GoogleSettings } from '@/utils/settings';
 
 const prompt = `
-You are an assistant that rates a video on a scale of 1 to 10 based on how informative you think the video is. Rate non-informative videos lower. You are provided with structured JSON metadata about the video with the following fields:
+You are an assistant that's helping a YouTube user reduce wastage of time on the platform. Rate the video provided to you on a scale of 1 to 10 based on how informative you think the video is. Rate non-informative videos lower. You are provided with the following metadata about the video:
 isShort: Indicating if the video is a YouTube Short
 title: title of the video
 description: Optional description of the video, it will be NULL if the description could not be retrieved.
 age: time since the video was published
 views: number of views for the video
 
-Use the attached thumbnail image also. In general, click bait, entertainment videos should be scored lower and informative videos higher. Analyse the video title and description for shock factor and other attention grabbing techniques and rate the video lower. Your output should be a json with 2 fields:
+In general, click bait and entertainment videos should be scored lower.Informative videos should be scored higher. Analyse the video title and description for shock factor and other attention grabbing techniques and rate the video lower. High view count doesn't mean that the video is informative. Your output should be a json with 2 fields:
 score: your score for the video
 explanation: your explanation for the score
 `
+
 
 type StateInit = { state: 'init' };
 type StateLoaded = { state: 'loaded', client: LMStudio | GoogleStudio }
