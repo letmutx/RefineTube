@@ -1,16 +1,16 @@
 declare const aiProviderSelection: HTMLSelectElement;
-declare const saveErrorMsg: HTMLParagraphElement;
 declare const aiStatus: HTMLParagraphElement | null;
 declare const lmStudioForm: HTMLFormElement;
 declare const googleForm: HTMLFormElement;
 declare const saveSettings: HTMLButtonElement;
+declare const saveErrorMsg: HTMLParagraphElement;
+declare const saveSuccessMsg: HTMLParagraphElement;
 declare const apiKeyInput: HTMLInputElement;
 declare const baseUrlInput: HTMLInputElement;
 
 
 if (aiStatus !== null) {
     settingsStorage.getValue().then(settings => {
-        console.log("Settings changed:", settings);
         if (settings === undefined || settings == null) {
             aiStatus.textContent = "Not configured yet. Please select an AI provider.";
             return
@@ -33,6 +33,7 @@ aiProviderSelection.addEventListener("change", function (event) {
 
 saveSettings.addEventListener("click", async () => {
     saveErrorMsg.hidden = true;
+    saveSuccessMsg.hidden = true;
     const aiProvider = aiProviderSelection.value;
 
     // TODO: customise prompt
@@ -49,6 +50,8 @@ saveSettings.addEventListener("click", async () => {
                     provider: aiProvider,
                     apiKey: apiKey,
                 })
+                saveSuccessMsg.hidden = false;
+                saveSuccessMsg.innerText = "Settings saved successfully!";
             }
             break;
         case "lmstudio":
@@ -62,6 +65,8 @@ saveSettings.addEventListener("click", async () => {
                     provider: 'lmstudio',
                     baseUrl: baseUrl
                 })
+                saveSuccessMsg.hidden = false;
+                saveSuccessMsg.innerText = "Settings saved successfully!";
             }
     }
 })
