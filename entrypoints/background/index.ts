@@ -66,7 +66,6 @@ export default defineBackground(() => {
             description,
             age,
             views,
-            thumbnailUrl,
             isShort,
           });
           return { status: "success", data: resp }

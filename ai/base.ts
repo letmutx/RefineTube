@@ -3,13 +3,12 @@ export declare interface VideoRequest {
     description: string | null
     age: string | null
     views: string | null
-    thumbnailUrl: string
     isShort: boolean
     videoId: string
 }
 
-export async function imageToBase64(url: string): Promise<string> {
-    const response = await fetch(url)
+export async function videoToThumbBase64(videoId: string): Promise<string> {
+    const response = await fetch("http://img.youtube.com/vi/" + videoId + "/sddefault.jpg")
     if (!response.ok) {
         throw new Error(`Failed to fetch image: ${response.statusText}`);
     }

@@ -1,8 +1,6 @@
 import { VideoRequest } from '../ai/base';
 
 function extractShortsMetadata(videoContainer: HTMLElement): VideoRequest {
-  const thumbNode = videoContainer.querySelector('img.yt-core-image') as HTMLImageElement;
-  const thumbnail = thumbNode.src;
   const videoId = videoContainer.querySelector('a[data-href*="/shorts"]')?.getAttribute('data-href')?.split("/").at(-1);
   const title = (videoContainer.querySelector('ytm-shorts-lockup-view-model-v2 h3.shortsLockupViewModelHostMetadataTitle a span[role="text"]') as HTMLSpanElement).innerText;
   const spans = videoContainer.querySelectorAll('span[role="text"]')
@@ -22,15 +20,12 @@ function extractShortsMetadata(videoContainer: HTMLElement): VideoRequest {
     videoId: videoId,
     title: title,
     description: null, // Shorts do not have descriptions in the same way as regular videos
-    thumbnailUrl: thumbnail,
     views: views,
     age: null, // Unavailable for shorts
   }
 }
 
 function extractVideoMetadata(videoContainer: HTMLElement): VideoRequest {
-  const thumbNode = videoContainer.querySelector('ytd-thumbnail a#thumbnail yt-image img') as HTMLImageElement;
-  const thumbnail = thumbNode.src;
   const idNode = videoContainer.querySelector('ytd-thumbnail a#thumbnail') as HTMLAnchorElement;
   const videoId = idNode.getAttribute('data-href')?.split('v=')[1]?.split('&')[0];
   const title = videoContainer.querySelector("div#meta a#video-title yt-formatted-string")?.textContent;
@@ -57,7 +52,6 @@ function extractVideoMetadata(videoContainer: HTMLElement): VideoRequest {
     videoId: videoId,
     title: title || null,
     description: description || null,
-    thumbnailUrl: thumbnail,
     views: views || null,
     age: age,
   };

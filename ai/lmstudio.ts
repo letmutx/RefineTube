@@ -1,6 +1,6 @@
 import { LLM, LMStudioClient } from "@lmstudio/sdk";
 import { z } from "zod";
-import { VideoRequest, imageToBase64 } from "./base";
+import { VideoRequest, videoToThumbBase64 } from "./base";
 
 export class LMStudio {
     client: LMStudioClient
@@ -18,15 +18,13 @@ export class LMStudio {
     }
 
     async request(options: VideoRequest) {
-        const imgBase64 = await imageToBase64(options.thumbnailUrl)
+        const imgBase64 = await videoToThumbBase64(options.videoId)
         const t = await this.client.files.prepareImageBase64("thumbnail", imgBase64);
         const schema = z.object({
             score: z.number().int(),
             explanation: z.string()
         })
-        const { thumbnailUrl, videoId, ...request } = { ...options };
-
-        console.log("Requesting prediction for video:", JSON.stringify(options));
+        const { videoId, ...request } = { ...options };
         const response = await this.model?.respond(
             [
                 { role: 'system', content: this.systemPrompt },
