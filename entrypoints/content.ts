@@ -83,11 +83,18 @@ function replaceHref(link: HTMLAnchorElement) {
 }
 
 function removeAnchorLinks() {
-  const videos: NodeListOf<HTMLAnchorElement> = document.querySelectorAll('div#contents a[href*="/watch"], div#contents a[href*="/shorts"]')
+  const videos: NodeListOf<HTMLAnchorElement> = document.querySelectorAll('a[href*="/watch"], a[href*="/shorts"]')
   videos.forEach(replaceHref);
 }
 
 type VideoState = 'safe' | 'unsafe' | 'loading' | 'unknown' | 'failed';
+
+const selector = `
+#page-manager #contents ytd-rich-item-renderer,
+#page-manager #contents ytd-grid-video-renderer,
+#page-manager #contents ytd-video-renderer,
+#page-manager #contents ytm-shorts-lockup-view-model-v2
+`;
 
 function registerClickListeners() {
   const app = document.getElementsByTagName('ytd-app')[0]
@@ -96,13 +103,22 @@ function registerClickListeners() {
     return;
   }
 
-  const videoContainers = document.querySelectorAll('#page-manager #contents ytd-rich-item-renderer, #page-manager #contents ytd-grid-video-renderer, #page-manager #contents ytd-video-renderer, #page-manager #contents ytm-shorts-lockup-view-model-v2')
-
+  const videoContainers = document.querySelectorAll(selector)
   videoContainers.forEach((videoContainer: Element) => {
     if (videoContainer.hasAttribute('refinetube-click-listener')) {
-      return
+      return;
     }
     videoContainer.setAttribute('refinetube-click-listener', 'true');
+
+    videoContainer.addEventListener('mouseenter', (event: Event) => {
+      const state = videoContainer.getAttribute('refinetube-state') as VideoState || 'unknown';
+      if (state === 'loading' || state === 'failed' || state === 'unknown') {
+        event.preventDefault();
+        event.stopPropagation();
+        console.log("Video is not processed yet, preventing default action.");
+        return;
+      }
+    }, true);
 
     videoContainer.addEventListener('click', (event: Event) => {
       const state = videoContainer.getAttribute('refinetube-state') as VideoState || 'unknown';
@@ -128,7 +144,7 @@ function registerClickListeners() {
             }, response => {
               if (response === undefined) {
                 videoContainer.setAttribute('refinetube-state', 'failed');
-                return
+                return;
               }
               // TODO: maybe restore hrefs?
               const vcHTMLElement = videoContainer as HTMLElement;
@@ -144,14 +160,14 @@ function registerClickListeners() {
               } else {
                 videoContainer.setAttribute('refinetube-state', 'failed');
               }
-            })
+            });
           } catch (error) {
             console.error("Error extracting video metadata:", error);
             videoContainer.setAttribute('refinetube-state', 'failed');
             return;
           }
       }
-    }, true)
+    }, true);
   });
 }
 
