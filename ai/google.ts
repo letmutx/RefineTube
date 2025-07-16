@@ -13,6 +13,7 @@ export class GoogleStudio {
 
     async request(options: VideoRequest) {
         let base64 = await imageToBase64(options.thumbnailUrl)
+        const { thumbnailUrl, videoId, ...request } = { ...options };
         const response = await this.ai.models.generateContent({
             model: this.model,
             contents: [
@@ -26,7 +27,7 @@ export class GoogleStudio {
                     },
                 },
                 {
-                    text: JSON.stringify(options),
+                    text: JSON.stringify(request),
                 }
             ]
         });
