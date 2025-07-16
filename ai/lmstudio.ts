@@ -13,7 +13,7 @@ export class LMStudio {
         this.systemPrompt = systemPrompt;
     }
 
-    async load(model: string = "gemma-3-4b-it-qat") {
+    async load(model: string = "gemma-3-27b-it-qat") {
         this.model = await this.client.llm.model(model)
     }
 
@@ -24,10 +24,13 @@ export class LMStudio {
             score: z.number().int(),
             explanation: z.string()
         })
+        const { thumbnailUrl, videoId, ...request } = { ...options };
+
+        console.log("Requesting prediction for video:", JSON.stringify(options));
         const response = await this.model?.respond(
             [
                 { role: 'system', content: this.systemPrompt },
-                { role: 'user', content: JSON.stringify(options), images: [t] },
+                { role: 'user', content: JSON.stringify(request), images: [t] },
             ],
             {
                 structured: schema,
