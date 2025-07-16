@@ -6,35 +6,37 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>RefineTube</title>
   <meta name="manifest.type" content="browser_action" />
-  <!-- TODO: figure how to use css here -->
+  <style>
+    html,
+    body {
+      min-width: 400px;
+    }
+  </style>
+  <link rel="stylesheet" href="../../assets/simple.min.css" />
 </head>
 
 <body>
   <div id="app">
-    <main>
-      <section>
-        <h2>Status</h2>
-        <p id="aiStatus">Fetching status...</p>
-      </section>
 
-      <section>
-        <h2>Configure</h2>
-        <label for="aiProviderSelection">Select AI provider:
-          <select id="aiProviderSelection">
-            <option value="google">Google</option>
-            <option value="lmstudio">LMStudio</option>
-          </select>
-        </label>
-        <form id="googleForm">
-          <input type="text" id="apiKeyInput" placeholder="API Key" />
-        </form>
-        <form id="lmStudioForm" hidden>
-          <input type="text" id="baseUrlInput" placeholder="Base URL" />
-        </form>
-        <button id="saveSettings">Save</button>
-        <p id="saveErrorMsg" style="color: red" hidden></p>
-      </section>
-    </main>
+    <h4>Status</h4>
+    <p id="aiStatus">Fetching status...</p>
+
+    <h4>Configure</h4>
+    <label for="aiProviderSelection">Select AI provider:
+      <select id="aiProviderSelection">
+        <option value="google">Google</option>
+        <option value="lmstudio">LMStudio</option>
+      </select>
+    </label>
+    <form id="googleForm">
+      <input type="text" id="apiKeyInput" placeholder="API Key" />
+    </form>
+    <form id="lmStudioForm" hidden>
+      <input type="text" id="baseUrlInput" placeholder="Base URL" />
+    </form>
+    <button id="saveSettings">Save</button>
+    <p id="saveErrorMsg" style="color: red" hidden></p>
+    <p id="saveSuccessMsg" hidden></p>
   </div>
   <script type="module" src="../../components/settings.ts"></script>
 </body>

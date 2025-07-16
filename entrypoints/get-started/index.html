@@ -15,8 +15,8 @@
     <main>
         <section>
             <p>RefineTube uses AI to score videos based on the thumbnail and prevent you from doom scrolling.</p>
+            <p id="aiStatus" hidden></p>
         </section>
-        <p id="aiStatus" hidden></p>
 
         <section>
             <h3>Configure AI Settings</h3>
@@ -43,6 +43,7 @@
             </form>
             <button id="saveSettings">Save</button>
             <p id="saveErrorMsg" style="color: red" hidden></p>
+            <p id="saveSuccessMsg" hidden></p>
         </section>
     </main>
     <script type="module" src="../../components/settings.ts"></script>
