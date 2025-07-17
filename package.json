@@ -1,8 +1,8 @@
 {
   "name": "refine-tube",
-  "description": "manifest.json description",
+  "description": "RefineTube is a browser extension that helps control your YouTube usage by providing AI-powered video ratings.",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1",
   "type": "module",
   "scripts": {
     "dev": "wxt",
