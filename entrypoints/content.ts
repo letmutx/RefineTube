@@ -26,12 +26,13 @@ function extractShortsMetadata(videoContainer: HTMLElement): VideoRequest {
 }
 
 function extractVideoMetadata(videoContainer: HTMLElement): VideoRequest {
-  const idNode = videoContainer.querySelector('ytd-thumbnail a#thumbnail') as HTMLAnchorElement;
+  console.log("Extracting video metadata", videoContainer.tagName);
+  const idNode = videoContainer.querySelector('a[data-href]') as HTMLAnchorElement;
   const videoId = idNode.getAttribute('data-href')?.split('v=')[1]?.split('&')[0];
-  const title = videoContainer.querySelector("div#meta a#video-title yt-formatted-string")?.textContent;
+  const title = videoContainer.querySelector('div#meta a#video-title yt-formatted-string, yt-lockup-metadata-view-model h3 span[role="text"]')?.textContent;
   const description = videoContainer.querySelector("yt-formatted-string#description-text")?.textContent;
   let views = null, age = null;
-  const spans = videoContainer.querySelectorAll("div#metadata-line span");
+  const spans = videoContainer.querySelectorAll("div#metadata-line span, yt-content-metadata-view-model-wiz__metadata-row span");
   for (let i = 0; i < spans.length; i++) {
     const content = spans[i]?.textContent;
     if (content == null) {
@@ -84,10 +85,8 @@ function removeAnchorLinks() {
 type VideoState = 'safe' | 'unsafe' | 'loading' | 'unknown' | 'failed';
 
 const selector = `
-#page-manager #contents ytd-rich-item-renderer,
-#page-manager #contents ytd-grid-video-renderer,
-#page-manager #contents ytd-video-renderer,
-#page-manager #contents ytm-shorts-lockup-view-model-v2
+ytd-rich-item-renderer, ytd-grid-video-renderer, ytd-video-renderer,
+ytm-shorts-lockup-view-model-v2, yt-lockup-view-model
 `;
 
 function registerClickListeners() {
@@ -103,6 +102,26 @@ function registerClickListeners() {
       return;
     }
     videoContainer.setAttribute('refinetube-click-listener', 'true');
+
+    videoContainer.addEventListener('mousemove', (event: Event) => {
+      const state = videoContainer.getAttribute('refinetube-state') as VideoState || 'unknown';
+      if (state === 'loading' || state === 'failed' || state === 'unknown') {
+        event.preventDefault();
+        event.stopPropagation();
+        console.log("Video is not processed yet, preventing default action.");
+        return;
+      }
+    }, true);
+
+    videoContainer.addEventListener('pointermove', (event: Event) => {
+      const state = videoContainer.getAttribute('refinetube-state') as VideoState || 'unknown';
+      if (state === 'loading' || state === 'failed' || state === 'unknown') {
+        event.preventDefault();
+        event.stopPropagation();
+        console.log("Video is not processed yet, preventing default action.");
+        return;
+      }
+    }, true);
 
     videoContainer.addEventListener('mouseenter', (event: Event) => {
       const state = videoContainer.getAttribute('refinetube-state') as VideoState || 'unknown';
@@ -174,7 +193,7 @@ export default defineContentScript({
   matches: ['*://*.youtube.com/*'],
   runAt: 'document_end',
   main() {
-    const pageManager = document.getElementById('page-manager')
+    const pageManager = document.getElementsByTagName('ytd-app')[0]
     if (!pageManager) {
       console.error("Page manager not found. Cannot set up mutation observer.");
       return;
