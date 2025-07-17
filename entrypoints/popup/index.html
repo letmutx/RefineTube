@@ -29,9 +29,19 @@
       </select>
     </label>
     <form id="googleForm">
+      <p class="notice">Click <a target="_blank" href="https://aistudio.google.com/app/apikey">here</a> to
+        generate a Google
+        API token. We use gemma3-27b-it model which comes with 1500 free API requests per day as of July, 2025.
+        Additional
+        usage may result in charges.</p>
       <input type="text" id="apiKeyInput" placeholder="API Key" />
     </form>
     <form id="lmStudioForm" hidden>
+      <p class="notice">Click <a target="_blank" href="https://lmstudio.ai/docs/app/api/headless">here</a>
+        for
+        instructions
+        to configure LM
+        studio</p>
       <input type="text" id="baseUrlInput" placeholder="Base URL" />
     </form>
     <button id="saveSettings">Save</button>
