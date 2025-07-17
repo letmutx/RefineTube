@@ -8,7 +8,7 @@ export declare interface VideoRequest {
 }
 
 export async function videoToThumbBase64(videoId: string): Promise<string> {
-    const response = await fetch("http://img.youtube.com/vi/" + videoId + "/sddefault.jpg")
+    const response = await fetch("http://img.youtube.com/vi/" + videoId + "/default.jpg")
     if (!response.ok) {
         throw new Error(`Failed to fetch image: ${response.statusText}`);
     }
